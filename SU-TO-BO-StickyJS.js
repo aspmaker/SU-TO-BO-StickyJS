@@ -6,7 +6,7 @@ const stickyIdPre = 'sticky-';
 //sitcky element list
 const stickyElements = [];
 //sticky control delay
-const stickyControlDelay = 10;
+const stickyControlDelay = 45;
 
 //get rondom integer
 const randomNumber = () => {
@@ -142,18 +142,19 @@ function checkAndSetElementScroll(element, cloneNode, parentOffset) {
         window.innerHeight -
         document.documentElement.scrollTop <=
         2;
+
     if (
         (parseFloat(scrollPos - parseFloat(divOffset.height)) >= parseFloat(divOffset.offsetTop / 3) &&
             parseFloat(scrollPos) >= parseFloat(divOffset?.parentOffsetTop))
     ) {
         const newStyle = {
             position: "fixed",
-            bottom: divOffset.stickyType == 'bottom' ? "3px" : "unset",
+            bottom: divOffset.stickyType == 'bottom' ? '3px' : 'unset',
             top: divOffset.stickyType == 'top' ? "3px" : "unset",
             right: "unset",
             left: parseFloat(divOffset.offsetLeft) + "px",
             zIndex: 99999,
-            width: parseFloat(divOffset.width) + "px",
+            width: parseFloat(divOffset.orgWidth) + "px",
         };
         Object.assign(element.style, newStyle);
     } else {
@@ -167,6 +168,7 @@ function checkAndSetElementScroll(element, cloneNode, parentOffset) {
         };
         Object.assign(element.style, newStyle);
     }
+
     //if bottom, go bottom
     if (scrollBottomStat) window.scrollTo(0, document.body.scrollHeight);
 }
@@ -213,6 +215,8 @@ function setOffset(element, cloneNode, parentOffset) {
     } else {
         stickyId = stickyIdPre + randomNumber();
         offsetObj.id = stickyId;
+        offsetObj.orgWidth = offsetObj.width;
+        offsetObj.orgHeight = offsetObj.height;
         stickyElements.push(offsetObj);
         element.setAttribute(dataStickyId, stickyId);
     }
