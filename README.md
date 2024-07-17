@@ -1,5 +1,5 @@
 # SU-TO-BO-StickyJS
-İt is an alternative javascript work for css sticky position style. Because css sticky elements are not working when their container has "overflow:hidden;" 
+İt is an alternative pure javascript work for css sticky position style. Because css sticky elements are not working when their container has "overflow:hidden;" 
 
 **Usage**:  
 Which html element you want to be a sticky element, you must add a class with name ".stickyElement". js code searches for this class to find the normal html element and convert it into a sticky element. 
