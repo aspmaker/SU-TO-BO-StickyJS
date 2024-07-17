@@ -24,7 +24,7 @@ const getStickyElementFromList = (id) => {
 
 //get sticky element index from list 
 const getStickyElementIndexFromList = (id) => {
-    let stickyElementIndex = stickyElements.findIndex(f => f.Id == id);
+    let stickyElementIndex = stickyElements.findIndex(f => f.id == id);
     return stickyElementIndex;
 }
 
@@ -33,6 +33,7 @@ const createAllStickyElement = ({
     elementSelector = `.${stickyElementClass}`,
 } = {}) => {
     let elements = document.querySelectorAll(`.${stickyElementClass}`);
+    //create all sticky element
     for (let i = 0; i < elements.length; i++) {
         let element = elements[i];
         createStickyElement(element);
@@ -183,7 +184,7 @@ function setOffset(element, cloneNode, parentOffset) {
     //get sticky type
     let sctickyType = element.getAttribute("data-stickyType") || 'top';
     let offsetObj = {
-        stickyElementId: stickyId,
+        id: stickyId,
         offsetLeft: elOffset.left,
         offsetTop: elOffset.top,
         parentOffsetLeft: parentOffset?.left || 0,
