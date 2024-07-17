@@ -8,5 +8,9 @@ Which html element you want to be a sticky element, you must add a class with na
         
 If you want to set another element as a border for the sticky element, you must specify the "id" property of the element you want to set as a border.  
   >**Example**:  
-      `<button style="background-color:red;" class="stickyElement" data-stickyParent="parentDiv">Top Sticky Button</button>` 
+      `<button style="background-color:red;" class="stickyElement" data-stickyParent="parentDiv">Top Sticky Button</button>`
+    
+
+When dom ready or something else you can call and run this function for create all your stciky elements:     
+> `createAllStickyElement();`
       
