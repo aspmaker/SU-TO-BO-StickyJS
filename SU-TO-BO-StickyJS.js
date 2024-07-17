@@ -88,21 +88,8 @@ const createStickyElement = (element) => {
             parentOffset = offset(parentElement, null);
         }
 
-        //clone sticky element
-        //#region
-        let elClone = element.cloneNode(true);
-        elClone.removeAttribute("id");
-        elClone.removeAttribute("name");
-        elClone.setAttribute("data-stickyClone", "1");
-        let elParent = element.parentElement;
-        elClone.classList.remove(stickyElementClass, "data-stickyParent");
-        let cloneNode = elParent.insertBefore(elClone, element);
-        cloneNode.style.opacity = "0";
-        cloneNode.style.display = "none";
-        //#endregion
-
         //set offset and add list
-        setOffset(element, cloneNode, parentOffset);
+        setOffset(element, parentOffset);
     }
 };
 
@@ -131,7 +118,7 @@ function checkAndSetAllElementScroll() {
 }
 
 //check replace lement position and scroll position and if required set new position
-function checkAndSetElementScroll(element, cloneNode, parentOffset) {
+function checkAndSetElementScroll(element) {
     //parse offset
     let stickyElementId = element.getAttribute(dataStickyId);
     let divOffset = getStickyElementFromList(stickyElementId);
@@ -145,7 +132,7 @@ function checkAndSetElementScroll(element, cloneNode, parentOffset) {
 
     if (
         (parseFloat(scrollPos - parseFloat(divOffset.height)) >= parseFloat(divOffset.offsetTop / 3) &&
-            parseFloat(scrollPos) >= parseFloat(divOffset?.parentOffsetTop))
+            parseFloat(scrollPos) >= parseFloat(divOffset?.parentOffsetTop) - parseFloat(divOffset.height))
     ) {
         const newStyle = {
             position: "fixed",
@@ -173,7 +160,7 @@ function checkAndSetElementScroll(element, cloneNode, parentOffset) {
     if (scrollBottomStat) window.scrollTo(0, document.body.scrollHeight);
 }
 
-function setOffset(element, cloneNode, parentOffset) {
+function setOffset(element, parentOffset) {
     //sticky element 
     let stickyElementIndex = undefined;
 
@@ -181,7 +168,7 @@ function setOffset(element, cloneNode, parentOffset) {
     let stickyId = element.getAttribute(dataStickyId);
 
     //get element pos
-    let elOffset = offset(element, cloneNode);
+    let elOffset = offset(element);
 
     //get sticky type
     let sctickyType = element.getAttribute("data-stickyType") || 'top';
@@ -200,7 +187,6 @@ function setOffset(element, cloneNode, parentOffset) {
         height: elOffset.height || 0,
         width: elOffset.width || 0,
         stickyType: sctickyType,
-        cloneNode: cloneNode,
         element: element,
         parentOffset: parentOffset
     };
@@ -210,24 +196,23 @@ function setOffset(element, cloneNode, parentOffset) {
         stickyElementIndex = getStickyElementIndexFromList(stickyId);
         //if exist 
         if (stickyElementIndex > -1) {
-            stickyElements[stickyElementIndex] = offsetObj;
+            stickyElements[stickyElementIndex] = { ...stickyElements[stickyElementIndex], ...offsetObj };
         }
     } else {
         stickyId = stickyIdPre + randomNumber();
         offsetObj.id = stickyId;
-        offsetObj.orgWidth = offsetObj.width;
-        offsetObj.orgHeight = offsetObj.height;
+        offsetObj.orgWidth = elOffset.width || 0;
+        offsetObj.orgHeight = elOffset.height || 0;
+        offsetObj.orgOffsetTop = elOffset.top;
+        offsetObj.orgoffsetLeft = elOffset.left;
         stickyElements.push(offsetObj);
         element.setAttribute(dataStickyId, stickyId);
     }
 }
 
 //return offset value
-function offset(el, clone) {
+function offset(el) {
     let rect = el.getBoundingClientRect();
-    //if (clone) clone.style.display = "inline";
-    let rectClone = clone?.getBoundingClientRect();
-    //if (clone) clone.style.display = "none";
     let scrollLeft =
         window.pageXOffset || document.documentElement.scrollLeft;
     let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -238,8 +223,11 @@ function offset(el, clone) {
         document.documentElement.scrollTop <=
         2;
     let top = 0;
-    if (!scrollBottomStat)
-        top = parseFloat(rectClone?.top || rect.top) + parseFloat(scrollTop);
+    if (!scrollBottomStat) {
+        let stickyId = el.getAttribute(dataStickyId);
+        let stickyElement = getStickyElementFromList(stickyId);
+        top = parseFloat(stickyElement?.orgOffsetTop || rect.top) + parseFloat(scrollTop);
+    }
 
     return {
         top: top,
