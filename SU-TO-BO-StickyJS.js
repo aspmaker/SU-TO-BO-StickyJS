@@ -6,7 +6,7 @@ const stickyIdPre = 'sticky-';
 //sitcky element list
 const stickyElements = [];
 //sticky control delay
-const stickyControlDelay = 45;
+const stickyControlDelay = 10;
 
 //get rondom integer
 const randomNumber = () => {
@@ -86,6 +86,9 @@ const createStickyElement = (element) => {
         if (parentAttr) {
             let parentElement = document.getElementById(parentAttr);
             parentOffset = offset(parentElement, null);
+        } else {
+            let parentElement = document.getElementsByTagName('body')[0];
+            parentOffset = offset(parentElement, null);
         }
 
         //set offset and add list
@@ -129,11 +132,13 @@ function checkAndSetElementScroll(element) {
         window.innerHeight -
         document.documentElement.scrollTop <=
         2;
+    let realScrollPos = parseFloat(scrollPos) + parseFloat(divOffset.orgHeight);
 
-    if (
-        (parseFloat(scrollPos - parseFloat(divOffset.height)) >= parseFloat(divOffset.offsetTop / 3) &&
-            parseFloat(scrollPos) >= parseFloat(divOffset?.parentOffsetTop) - parseFloat(divOffset.height))
-    ) {
+    if (realScrollPos < 0 && parseFloat(divOffset?.parentOffsetTop) == 0) return;
+
+    if (realScrollPos >= parseFloat(divOffset.offsetTop / 3) &&
+        parseFloat(realScrollPos) >= (parseFloat(divOffset?.parentOffsetTop))) {
+
         const newStyle = {
             position: "fixed",
             bottom: divOffset.stickyType == 'bottom' ? '3px' : 'unset',
@@ -196,7 +201,7 @@ function setOffset(element, parentOffset) {
         stickyElementIndex = getStickyElementIndexFromList(stickyId);
         //if exist 
         if (stickyElementIndex > -1) {
-            stickyElements[stickyElementIndex] = { ...stickyElements[stickyElementIndex], ...offsetObj };
+            stickyElements[stickyElementIndex] = { ...offsetObj, ...stickyElements[stickyElementIndex] };
         }
     } else {
         stickyId = stickyIdPre + randomNumber();
@@ -204,7 +209,7 @@ function setOffset(element, parentOffset) {
         offsetObj.orgWidth = elOffset.width || 0;
         offsetObj.orgHeight = elOffset.height || 0;
         offsetObj.orgOffsetTop = elOffset.top;
-        offsetObj.orgoffsetLeft = elOffset.left;
+        offsetObj.orgOffsetLeft = elOffset.left;
         stickyElements.push(offsetObj);
         element.setAttribute(dataStickyId, stickyId);
     }
@@ -237,6 +242,16 @@ function offset(el) {
     };
 }
 
+//set style for all clone element
+const setAllCloneElementStyle = (show = false) => {
+    let clones = document.querySelectorAll('[data-stickyclone="1"]');
+    for (let index = 0; index < clones.length; index++) {
+        const element = clones[index];
+        element.style.display = show ? "" : "none";
+    }
+}
+
+
 //listen document for change element
 const observerElement = () => {
     // Select the node that will be observed for mutations
@@ -252,20 +267,17 @@ const observerElement = () => {
 
     // Callback function to execute when mutations are observed
     const callback = (mutationList, observer) => {
-        console.log(mutationList);
-
         for (let i = 0; i < mutationList.length; i++) {
             let mutation = mutationList[i];
             if (mutation.type != "childList") continue;
             let classList = Array.from(mutation.target.classList);
 
-            console.log(classList);
-
             //stciky
             if (classList.some((f) => String(f).toLowerCase() == stickyElementClass.toLowerCase())
             ) {
                 setTimeout(() => {
-                    createStickyElement(mutation.target);
+                    //createStickyElement(mutation.target);
+                    createAllStickyElement();
                 }, 1000);
             }
 
@@ -290,7 +302,8 @@ const observerElement = () => {
                         if (childNodeClasses.some((f) =>
                             String(f).toLowerCase() == stickyElementClass.toLowerCase())) {
                             setTimeout(() => {
-                                createStickyElement(childNode);
+                                //createStickyElement(childNode);
+                                createAllStickyElement();
                             }, 1000);
                         }
                     }
@@ -305,12 +318,23 @@ const observerElement = () => {
     observer.observe(targetNode, config);
 };
 
-//set style for all clone element
-const setAllCloneElementStyle = (show = false) => {
-    let clones = document.querySelectorAll('[data-stickyclone="1"]');
-    for (let index = 0; index < clones.length; index++) {
-        const element = clones[index];
-        element.style.display = show ? "" : "none";
-    }
-}
+//observer function
+observerElement();
 
+//create and add after dom
+//observer function listen for this element
+setTimeout(() => {
+    let observerContainer = document.getElementById("observerContainer");
+
+    let button = document.createElement('BUTTON');
+    // creating text to be
+    //displayed on button
+    let text = document.createTextNode("Observer Button!");
+
+    // appending text to button
+    button.appendChild(text);
+    //add sticky class
+    button.classList.add('btn', 'btn-danger', 'stickyElement');
+    // appending button to div
+    observerContainer.append(button);
+}, 1000 * 1);
