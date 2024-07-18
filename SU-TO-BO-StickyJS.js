@@ -34,45 +34,56 @@ const getStickyElementIndexFromList = (id) => {
 //create all sticky element and required functions
 const createAllStickyElement = ({
     elementSelector = `.${stickyElementClass}`,
+    activateListeners = true
 } = {}) => {
-    let elements = document.querySelectorAll(`.${stickyElementClass}`);
+    let elements = document.querySelectorAll(elementSelector);
     //create all sticky element
     for (let i = 0; i < elements.length; i++) {
         let element = elements[i];
-        createStickyElement(element);
+        //remove stickyid attribute
+        if (element) {
+            if (activateListeners == false) {
+                element.removeAttribute(dataStickyId);
+            }
+            //replace element to sticky element
+            createStickyElement(element);
+        }
     }
 
     //first check and set position
     checkAndSetAllElementScroll();
 
-    //listen for changes
-    let setTimoutFunc;
-    window.addEventListener("load", function () {
-        //check
-        clearTimeout(setTimoutFunc);
-        setTimoutFunc = setTimeout(() => {
-            setAllOffset();
-            checkAndSetAllElementScroll();
-        }, stickyControlDelay);
-    });
+    if (activateListeners) {
+        //listen for changes
+        let setTimoutFunc;
+        window.addEventListener("load", function () {
+            //check
+            clearTimeout(setTimoutFunc);
+            setTimoutFunc = setTimeout(() => {
+                setAllOffset();
+                checkAndSetAllElementScroll();
+            }, stickyControlDelay);
+        });
 
-    window.addEventListener("scroll", function () {
-        //check
-        clearTimeout(setTimoutFunc);
-        setTimoutFunc = setTimeout(() => {
-            setAllOffset();
-            checkAndSetAllElementScroll();
-        }, stickyControlDelay);
-    });
+        window.addEventListener("scroll", function () {
+            //check
+            clearTimeout(setTimoutFunc);
+            setTimoutFunc = setTimeout(() => {
+                setAllOffset();
+                checkAndSetAllElementScroll();
+            }, stickyControlDelay);
+        });
 
-    window.addEventListener("resize", function () {
-        //check
-        clearTimeout(setTimoutFunc);
-        setTimoutFunc = setTimeout(() => {
-            setAllOffset();
-            checkAndSetAllElementScroll();
-        }, stickyControlDelay);
-    });
+        window.addEventListener("resize", function () {
+            //check
+            clearTimeout(setTimoutFunc);
+            setTimoutFunc = setTimeout(() => {
+                //clear list for new offset values
+                stickyElements.length = 0;
+                createAllStickyElement({ activateListeners: false });
+            }, stickyControlDelay);
+        });
+    }
 };
 
 //create sticky element
@@ -81,7 +92,11 @@ const createStickyElement = (element) => {
 
     function setElementForSticky(element) {
         let stickyElementId = element.getAttribute(dataStickyId);
-        if (stickyElementId) return;
+        if (stickyElementId && stickyElements.length > 0)
+            return;
+
+        //remove sticky id
+        element.removeAttribute(dataStickyId);
 
         //get top border element
         let topBorderElementId = element.getAttribute(stickyTopBorderAttrName);
@@ -356,4 +371,4 @@ setTimeout(() => {
     button.setAttribute('data-stickyType', 'bottom');
     // appending button to div
     observerContainer.append(button);
-}, 1000 * 1);
+}, 1000 * 5);
