@@ -3,6 +3,9 @@ const stickyElementClass = 'stickyElement';
 //sticky elementattr name for id 
 const dataStickyId = 'data-stickyId';
 const stickyIdPre = 'sticky-';
+//stciky top & bottom border ids
+const stickyTopBorderAttrName = 'data-stickyTopBorder';
+const stickyBottomBorderAttrName = 'data-stickyBottomBorder';
 //sitcky element list
 const stickyElements = [];
 //sticky control delay
@@ -80,19 +83,30 @@ const createStickyElement = (element) => {
         let stickyElementId = element.getAttribute(dataStickyId);
         if (stickyElementId) return;
 
-        //get parent
-        let parentAttr = element.getAttribute("data-stickyParent");
-        let parentOffset = {};
-        if (parentAttr) {
-            let parentElement = document.getElementById(parentAttr);
-            parentOffset = offset(parentElement, null);
+        //get top border element
+        let topBorderElementId = element.getAttribute(stickyTopBorderAttrName);
+        let topBorderOffset = {};
+        if (topBorderElementId) {
+            let topBorderElement = document.getElementById(topBorderElementId);
+            topBorderOffset = offset(topBorderElement, null);
         } else {
-            let parentElement = document.getElementsByTagName('body')[0];
-            parentOffset = offset(parentElement, null);
+            let topBorderElement = document.getElementsByTagName('body')[0];
+            topBorderOffset = offset(topBorderElement, null);
+        }
+
+        //get bottm border element
+        let bottomBorderElementId = element.getAttribute(stickyBottomBorderAttrName);
+        let bottomBorderOffset = {};
+        if (bottomBorderElementId) {
+            let bottomBorderElement = document.getElementById(bottomBorderElementId);
+            bottomBorderOffset = offset(bottomBorderElement, null);
+        } else {
+            let bottomBorderElement = document.getElementsByTagName('body')[0];
+            bottomBorderOffset = offset(bottomBorderElement, null);
         }
 
         //set offset and add list
-        setOffset(element, parentOffset);
+        setOffset(element, topBorderOffset, bottomBorderOffset);
     }
 };
 
@@ -124,39 +138,40 @@ function checkAndSetAllElementScroll() {
 function checkAndSetElementScroll(element) {
     //parse offset
     let stickyElementId = element.getAttribute(dataStickyId);
-    let divOffset = getStickyElementFromList(stickyElementId);
+    let elementOffset = getStickyElementFromList(stickyElementId);
     let scrollPos =
-        (window.pageYOffSet || document.documentElement.scrollTop) - divOffset.height;
+        (window.pageYOffSet || document.documentElement.scrollTop) - elementOffset.orgHeight;
     let scrollBottomStat =
         document.documentElement.scrollHeight -
         window.innerHeight -
         document.documentElement.scrollTop <=
         2;
-    let realScrollPos = parseFloat(scrollPos) + parseFloat(divOffset.orgHeight);
+    let realScrollPos = parseFloat(scrollPos) + parseFloat(elementOffset.orgHeight) + 15;
 
-    if (realScrollPos < 0 && parseFloat(divOffset?.parentOffsetTop) == 0) return;
+    if (realScrollPos < 0 && parseFloat(elementOffset?.topBorderOffset.top) == 0) return;
 
-    if (realScrollPos >= parseFloat(divOffset.offsetTop / 3) &&
-        parseFloat(realScrollPos) >= (parseFloat(divOffset?.parentOffsetTop))) {
+    if (realScrollPos >= parseFloat(elementOffset.offsetTop / 3) &&
+        parseFloat(realScrollPos) >= (parseFloat(elementOffset?.topBorderOffset.top) + parseFloat(elementOffset.orgHeight)) &&
+        parseFloat(realScrollPos) <= (parseFloat(elementOffset?.bottomBorderOffset.top) + parseFloat(elementOffset?.bottomBorderOffset.height) - parseFloat(elementOffset.orgHeight))) {
 
         const newStyle = {
             position: "fixed",
-            bottom: divOffset.stickyType == 'bottom' ? '3px' : 'unset',
-            top: divOffset.stickyType == 'top' ? "3px" : "unset",
+            bottom: elementOffset.stickyType == 'bottom' ? '3px' : 'unset',
+            top: elementOffset.stickyType == 'top' ? "3px" : "unset",
             right: "unset",
-            left: parseFloat(divOffset.offsetLeft) + "px",
+            left: parseFloat(elementOffset.offsetLeft) + "px",
             zIndex: 99999,
-            width: parseFloat(divOffset.orgWidth) + "px",
+            width: parseFloat(elementOffset.orgWidth) + "px",
         };
         Object.assign(element.style, newStyle);
     } else {
         const newStyle = {
-            position: divOffset.poisiton || "inherit",
-            bottom: divOffset.bottom,
-            top: divOffset.top,
-            right: divOffset.right,
-            left: divOffset.left,
-            zIndex: divOffset.zIndex,
+            position: elementOffset.poisiton || "inherit",
+            bottom: elementOffset.bottom,
+            top: elementOffset.top,
+            right: elementOffset.right,
+            left: elementOffset.left,
+            zIndex: elementOffset.zIndex,
         };
         Object.assign(element.style, newStyle);
     }
@@ -165,7 +180,7 @@ function checkAndSetElementScroll(element) {
     if (scrollBottomStat) window.scrollTo(0, document.body.scrollHeight);
 }
 
-function setOffset(element, parentOffset) {
+function setOffset(element, topBorderOffset, bottomBorderOffset) {
     //sticky element 
     let stickyElementIndex = undefined;
 
@@ -175,14 +190,11 @@ function setOffset(element, parentOffset) {
     //get element pos
     let elOffset = offset(element);
 
-    //get sticky type
-    let sctickyType = element.getAttribute("data-stickyType") || 'top';
+    //offset obj
     let offsetObj = {
         id: stickyId,
         offsetLeft: elOffset.left,
         offsetTop: elOffset.top,
-        parentOffsetLeft: parentOffset?.left || 0,
-        parentOffsetTop: parentOffset?.top || 0,
         position: element.style.position || "inherit",
         left: element.style.left ? element.style.left : "unset",
         bottom: element.style.bottom ? element.style.bottom : "unset",
@@ -190,10 +202,7 @@ function setOffset(element, parentOffset) {
         right: element.style.right ? element.style.right : "unset",
         zIndex: element.style.zIndex || 1,
         height: elOffset.height || 0,
-        width: elOffset.width || 0,
-        stickyType: sctickyType,
-        element: element,
-        parentOffset: parentOffset
+        width: elOffset.width || 0
     };
     //if sticky id exist in element attrs
     if (stickyId) {
@@ -204,12 +213,21 @@ function setOffset(element, parentOffset) {
             stickyElements[stickyElementIndex] = { ...offsetObj, ...stickyElements[stickyElementIndex] };
         }
     } else {
+        //get sticky type
+        let sctickyType = element.getAttribute("data-stickyType") || 'top';
+        //sticky element id
         stickyId = stickyIdPre + randomNumber();
+        //props
         offsetObj.id = stickyId;
         offsetObj.orgWidth = elOffset.width || 0;
         offsetObj.orgHeight = elOffset.height || 0;
         offsetObj.orgOffsetTop = elOffset.top;
         offsetObj.orgOffsetLeft = elOffset.left;
+        offsetObj.element = element;
+        offsetObj.topBorderOffset = topBorderOffset;
+        offsetObj.bottomBorderOffset = bottomBorderOffset;
+        offsetObj.stickyType = sctickyType;
+        //push element to sticky element list
         stickyElements.push(offsetObj);
         element.setAttribute(dataStickyId, stickyId);
     }
@@ -330,11 +348,12 @@ setTimeout(() => {
     // creating text to be
     //displayed on button
     let text = document.createTextNode("Observer Button!");
-
     // appending text to button
     button.appendChild(text);
-    //add sticky class
+    //add sticky && other class
     button.classList.add('btn', 'btn-danger', 'stickyElement');
+    //set styicky type attr
+    button.setAttribute('data-stickyType', 'bottom');
     // appending button to div
     observerContainer.append(button);
 }, 1000 * 1);
