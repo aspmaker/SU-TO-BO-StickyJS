@@ -6,9 +6,14 @@ Which html element you want to be a sticky element, you must add a class with na
   >**Example**:  
       `<button style="background-color:red;" class="stickyElement">Top Sticky Button</button>`
         
-If you want to set another element as a border for the sticky element, you must specify the "id" property of the element you want to set as a border.  
+If you want to set another element as a top border for the sticky element, you must specify the "id" property of the element you want to set as a border.  Attribute nama is "**data-stickyTopBorder**"
   >**Example**:  
-      `<button style="background-color:red;" class="stickyElement" data-stickyParent="parentDiv">Top Sticky Button</button>`
+      `<button style="background-color:red;" class="stickyElement" data-stickyTopBorder="parentDiv">Top Sticky Button</button>`
+       
+&nbsp;   
+If you want to set another element as a bottom border for the sticky element, you must specify the "id" property of the element you want to set as a border.  Attribute nama is "**data-stickyBottomBorder**"
+  >**Example**:  
+      `<button style="background-color:red;" class="stickyElement" data-stickyBottomBorder="parentDiv">Top Sticky Button</button>`
        
 &nbsp;   
 Auto run,find and replace sticky element:      
